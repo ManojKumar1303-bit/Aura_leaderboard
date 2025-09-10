@@ -1,0 +1,8 @@
+{
+  "rules": {
+    "teams": {
+      ".read": true,
+      ".write": "auth != null && auth.token.email == 'aura@gmail.com'"
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "name": "aura-leaderboard",
+  "version": "1.0.0",
+  "description": "College Event Leaderboard with Firebase",
+  "scripts": {
+    "start": "npx http-server -p 8000 -c-1 --cors"
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  },
+  "dependencies": {
+    "firebase": "^12.2.1"
+  }
+}
