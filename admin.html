@@ -66,8 +66,12 @@
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label for="newScore">New Score</label>
-                                <input type="number" id="newScore" required min="0">
+                                <label for="newScore">Score Amount</label>
+                                <input type="number" id="newScore" required>
+                            </div>
+                            <div class="form-group" style="display:flex; align-items:center; gap:10px;">
+                                <input type="checkbox" id="incrementMode" checked>
+                                <label for="incrementMode">Add to existing (increment)</label>
                             </div>
                         </div>
                         <button type="submit" class="btn btn-warning">Update Score</button>

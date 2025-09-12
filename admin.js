@@ -55,6 +55,16 @@ class AdminPanel {
             this.handleUpdateScore();
         });
 
+        // Persist increment toggle
+        const incToggle = document.getElementById('incrementMode');
+        if (incToggle) {
+            const saved = localStorage.getItem('incrementMode');
+            if (saved !== null) incToggle.checked = saved === 'true';
+            incToggle.addEventListener('change', () => {
+                localStorage.setItem('incrementMode', incToggle.checked ? 'true' : 'false');
+            });
+        }
+
         // Delete team form
         document.getElementById('deleteTeamForm').addEventListener('submit', (e) => {
             e.preventDefault();
@@ -188,27 +198,38 @@ class AdminPanel {
 
     async handleUpdateScore() {
         const teamId = document.getElementById('updateTeamSelect').value;
-        const newScore = parseInt(document.getElementById('newScore').value);
+        const deltaScore = parseInt(document.getElementById('newScore').value);
+        let incrementMode = true;
+        const incEl = document.getElementById('incrementMode');
+        if (incEl) {
+            incrementMode = incEl.checked;
+        } else {
+            const saved = localStorage.getItem('incrementMode');
+            if (saved !== null) incrementMode = saved === 'true';
+        }
 
         if (!teamId) {
             alert('Please select a team');
             return;
         }
 
-        if (isNaN(newScore) || newScore < 0) {
+        if (isNaN(deltaScore)) {
             alert('Please enter a valid score');
             return;
         }
 
         try {
             const teamRef = window.ref(window.database, `teams/${teamId}`);
-            await window.update(teamRef, { score: newScore });
+            const team = this.teams.find(t => t.id === teamId);
+            const current = team ? (team.score || 0) : 0;
+            const updatedTotal = incrementMode ? (current + deltaScore) : deltaScore;
+            await window.update(teamRef, { score: updatedTotal });
             
             // Clear form
             document.getElementById('updateTeamSelect').value = '';
             document.getElementById('newScore').value = '';
             
-            alert('Score updated successfully!');
+            alert(`Score updated successfully! New total: ${updatedTotal}`);
         } catch (error) {
             console.error('Error updating score:', error);
             alert('Error updating score. Please try again.');

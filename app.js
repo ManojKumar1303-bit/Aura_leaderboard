@@ -6,12 +6,10 @@ class Leaderboard {
     }
 
     initializeLeaderboard() {
-        // Wait for Firebase to be available
         if (typeof window.database === 'undefined') {
             setTimeout(() => this.initializeLeaderboard(), 100);
             return;
         }
-
         this.setupRealtimeListener();
     }
 
@@ -21,15 +19,8 @@ class Leaderboard {
         window.onValue(teamsRef, (snapshot) => {
             const data = snapshot.val();
             if (data) {
-                this.teams = Object.entries(data).map(([id, team]) => ({
-                    id,
-                    name: team.name,
-                    score: team.score || 0
-                }));
-                
-                // Sort teams by score (descending)
+                this.teams = Object.entries(data).map(([id, team]) => ({ id, name: team.name, score: team.score || 0 }));
                 this.teams.sort((a, b) => b.score - a.score);
-                
                 this.renderLeaderboard();
             } else {
                 this.teams = [];
@@ -42,69 +33,90 @@ class Leaderboard {
     }
 
     renderLeaderboard() {
-        const tbody = document.getElementById('leaderboardBody');
-        
+        const podium = document.getElementById('podium');
+        const pillList = document.getElementById('pillList');
+        if (!podium || !pillList) return;
+
         if (this.teams.length === 0) {
-            this.renderEmptyState();
+            podium.innerHTML = this.getEmptyHTML('No teams registered yet');
+            pillList.innerHTML = '';
             return;
         }
 
-        tbody.innerHTML = this.teams.map((team, index) => {
-            const rank = index + 1;
-            const medal = this.getMedalIcon(rank);
-            
-            return `
-                <tr class="team-row">
-                    <td class="rank">
-                        <span class="rank-number">${rank}</span>
-                        ${medal}
-                    </td>
-                    <td class="team-name">${team.name}</td>
-                    <td class="score">${team.score}</td>
-                </tr>
-            `;
-        }).join('');
+        const topThree = this.teams.slice(0, 3);
+        const others = this.teams.slice(3);
+
+        podium.innerHTML = this.renderPodium(topThree);
+        pillList.innerHTML = others.map((team, index) => this.renderPillRow(team, index + 4)).join('');
+    }
+
+    renderPodium(topThree) {
+        const [first, second, third] = [topThree[0], topThree[1], topThree[2]];
+        return `
+            <div class="podium-stage">
+                <div class="dna-backdrop" aria-hidden="true"></div>
+                <div class="podium-columns">
+                    <div class="podium-col second">${second ? this.renderPodiumBlock(second, 2) : ''}</div>
+                    <div class="podium-col first">${first ? this.renderPodiumBlock(first, 1) : ''}</div>
+                    <div class="podium-col third">${third ? this.renderPodiumBlock(third, 3) : ''}</div>
+                </div>
+            </div>
+        `;
+    }
+
+    renderPodiumBlock(team, rank) {
+        return `
+            <div class="podium-block rank-${rank}">
+                <div class="place-badge">${rank}</div>
+                <div class="podium-body">
+                    <div class="team-name" style="font-size:1.6rem;">${team.name}</div>
+                    <div class="spacer"></div>
+                    <div class="score" style="font-size:2.6rem;">${team.score}</div>
+                </div>
+            </div>
+        `;
+    }
+
+    renderPillRow(team, rank) {
+        return `
+            <div class="pill-row">
+                <div class="pill-rank">${rank}.</div>
+                <div class="pill-name">${team.name}</div>
+                <div class="pill-score">${team.score}</div>
+            </div>
+        `;
+    }
+
+    getEmptyHTML(message) {
+        return `
+            <div class="empty-state">
+                <div class="empty-message">${message}</div>
+            </div>
+        `;
     }
 
     renderEmptyState() {
-        const tbody = document.getElementById('leaderboardBody');
-        tbody.innerHTML = `
-            <tr class="empty-row">
-                <td colspan="3" class="empty-message">
-                    <div class="empty-icon">🏆</div>
-                    <div>No teams registered yet</div>
-                </td>
-            </tr>
-        `;
+        const podium = document.getElementById('podium');
+        const pillList = document.getElementById('pillList');
+        if (podium) podium.innerHTML = this.getEmptyHTML('No teams registered yet');
+        if (pillList) pillList.innerHTML = '';
     }
 
     renderErrorState() {
-        const tbody = document.getElementById('leaderboardBody');
-        tbody.innerHTML = `
-            <tr class="error-row">
-                <td colspan="3" class="error-message">
-                    <div class="error-icon">⚠️</div>
-                    <div>Error loading leaderboard. Please refresh the page.</div>
-                </td>
-            </tr>
-        `;
+        const podium = document.getElementById('podium');
+        const pillList = document.getElementById('pillList');
+        if (podium) podium.innerHTML = this.getEmptyHTML('Error loading leaderboard. Please refresh the page.');
+        if (pillList) pillList.innerHTML = '';
     }
 
     getMedalIcon(rank) {
         switch (rank) {
-            case 1:
-                return '<span class="medal gold">🥇</span>';
-            case 2:
-                return '<span class="medal silver">🥈</span>';
-            case 3:
-                return '<span class="medal bronze">🥉</span>';
-            default:
-                return '';
+            case 1: return '<span class="medal gold">🥇</span>';
+            case 2: return '<span class="medal silver">🥈</span>';
+            case 3: return '<span class="medal bronze">🥉</span>';
+            default: return '';
         }
     }
 }
 
-// Initialize leaderboard when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-    new Leaderboard();
-});
+document.addEventListener('DOMContentLoaded', () => { new Leaderboard(); });
